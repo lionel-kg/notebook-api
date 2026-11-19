@@ -7,11 +7,10 @@ pipeline {
         APP_PORT = "4000"
         // Fichier .env de production présent sur le VPS (DATABASE_URL, JWT_SECRET, CLIENT_ORIGIN...)
         // À adapter au chemin réel sur ton serveur.
-        ENV_FILE = "/opt/notebook/api.env"
+        ENV_FILE = "/opt/notebook/.env"
         // Volume Docker où sont gardées les photos entre deux déploiements
         UPLOADS_VOLUME = "/opt/notebook/uploads"
         // Fichier présent sur le VPS avec POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB (voir deploy/db.env.example)
-        DB_ENV_FILE = "/opt/notebook/db.env"
         NETWORK = "notebook-network"
     }
 

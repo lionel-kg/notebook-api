@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  albums       Album[]
+}
+
+model Album {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title     String
+  subtitle  String   @default("")
+  deskColor String   @default("#2b3340")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pages     Page[]
+  photos    Photo[]
+
+  @@index([ownerId])
+}
+
+/// Une page de l'album. `key` est l'identifiant stable côté client.
+model Page {
+  id       String @id @default(cuid())
+  albumId  String
+  album    Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  key      String
+  position Int
+  bg       String @default("creme")
+  /// Traits de dessin : [{ id, color, size, pts: [{x,y}] }]
+  strokes  Json   @default("[]")
+  items    Item[]
+
+  @@unique([albumId, key])
+  @@index([albumId, position])
+}
+
+/// Élément posé sur une page : photo, sticker ou texte.
+model Item {
+  id       String  @id @default(cuid())
+  pageId   String
+  page     Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  key      String
+  position Int
+  type     String
+  x        Float
+  y        Float
+  w        Float
+  h        Float?
+  r        Float   @default(0)
+  kind     String?
+  text     String?
+  fs       Float?
+  color    String?
+  font     String?
+  frame    Boolean?
+  photoId  String?
+  photo    Photo?  @relation(fields: [photoId], references: [id], onDelete: SetNull)
+
+  @@unique([pageId, key])
+  @@index([pageId, position])
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  albumId   String
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  filename  String   @unique
+  mimeType  String
+  width     Int
+  height    Int
+  size      Int
+  createdAt DateTime @default(now())
+  items     Item[]
+
+  @@index([albumId])
+}

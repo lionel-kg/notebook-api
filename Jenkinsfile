@@ -29,7 +29,7 @@ pipeline {
                 sh 'docker network inspect ${NETWORK} >/dev/null 2>&1 || docker network create ${NETWORK}'
                 // Ne recrée rien si la base tourne déjà ; attend qu'elle soit prête (healthcheck) avant de continuer.
                 // Les données restent dans le volume notebook-pgdata.
-                sh 'docker compose --env-file ${DB_ENV_FILE} up -d --wait'
+                sh 'docker compose up -d'
             }
         }
         stage('Deploy') {

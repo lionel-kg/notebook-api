@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm ci --omit=dev
+RUN npm install
 
 COPY prisma ./prisma/
 RUN npx prisma generate

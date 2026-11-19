@@ -10,6 +10,8 @@ RUN npm ci --no-audit --no-fund
 
 COPY tsconfig.json ./
 COPY src ./src
+COPY .env.example .env
+
 RUN npm run build
 
 # ---------- 2. Image d'exécution ----------

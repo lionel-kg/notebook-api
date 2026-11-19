@@ -22,16 +22,7 @@ pipeline {
                 sh 'docker build -t ${IMAGE_NAME}:latest .'
             }
         }
-        stage('Database') {
-            steps {
-                echo 'Démarrage de la base PostgreSQL...'
-                // Crée le réseau partagé s'il n'existe pas encore
-                sh 'docker network inspect ${NETWORK} >/dev/null 2>&1 || docker network create ${NETWORK}'
-                // Ne recrée rien si la base tourne déjà ; attend qu'elle soit prête (healthcheck) avant de continuer.
-                // Les données restent dans le volume notebook-pgdata.
-                sh 'docker compose up -d'
-            }
-        }
+
         stage('Deploy') {
             steps {
                 echo 'Déploiement du conteneur...'

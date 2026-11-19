@@ -6,9 +6,9 @@ services:
     container_name: notebook-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-notebook}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans db.env}
-      POSTGRES_DB: ${POSTGRES_DB:-travel_board}
+      POSTGRES_USER: notebook
+      POSTGRES_PASSWORD: y75dTQHwg8vj86lo08ZuJ7Crqfk
+      POSTGRES_DB: travel_board
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -18,8 +18,7 @@ services:
     # ports:
     #   - '127.0.0.1:5432:5432'
     healthcheck:
-      test:
-        ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      test: ["CMD-SHELL", 'pg_isready -U "notebook" -d "travel_board"']
       interval: 10s
       timeout: 5s
       retries: 5

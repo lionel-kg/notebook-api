@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "notebook_api"
         CONTAINER_NAME = "notebook-api"
-        APP_PORT = "4000"
+        APP_PORT = "4001"
         // Le .env de production (DATABASE_URL, JWT_SECRET, CLIENT_ORIGIN...) est stocké dans Jenkins :
         // Administrer Jenkins > Credentials > "Secret file" avec cet ID.
         ENV_CREDENTIALS_ID = "notebook-api-env"

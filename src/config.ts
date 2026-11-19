@@ -13,7 +13,7 @@ if (jwtSecret.length < 32) {
 }
 
 export const config = {
-  port: Number(process.env.PORT ?? 4000),
+  port: Number(process.env.PORT ?? 4001),
   jwtSecret,
   clientOrigin: process.env.CLIENT_ORIGIN ?? "https://notebook.lionelkg.com",
   uploadDir: path.resolve(process.env.UPLOAD_DIR ?? "./uploads"),

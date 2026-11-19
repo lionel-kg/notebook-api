@@ -18,7 +18,7 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 ENV NODE_ENV=production \
-    PORT=4000 \
+    PORT=4001 \
     UPLOAD_DIR=/app/uploads \
     CHECKPOINT_DISABLE=1
 
@@ -32,7 +32,7 @@ COPY --from=build /app/dist ./dist
 RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 USER node
 
-EXPOSE 4000
+EXPOSE 4001
 
 # Crée/met à jour les tables puis démarre l'API
 CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && exec node dist/index.js"]

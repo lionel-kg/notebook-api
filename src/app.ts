@@ -12,7 +12,7 @@ import { errorHandler, notFound } from './middleware/error.js';
 export function createApp() {
   const app = express();
 
-  app.set('trust proxy', 1);
+  app.set('trust proxy', config.trustProxy);
   app.disable('x-powered-by');
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
   app.use(cors({ origin: config.clientOrigin, credentials: true }));

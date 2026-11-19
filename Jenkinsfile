@@ -5,12 +5,11 @@ pipeline {
         IMAGE_NAME = "notebook_api"
         CONTAINER_NAME = "notebook-api"
         APP_PORT = "4000"
-        // Fichier .env de production présent sur le VPS (DATABASE_URL, JWT_SECRET, CLIENT_ORIGIN...)
-        // À adapter au chemin réel sur ton serveur.
-        ENV_FILE = "/opt/notebook/api.env"
-        // Volume Docker où sont gardées les photos entre deux déploiements
+        // Le .env de production (DATABASE_URL, JWT_SECRET, CLIENT_ORIGIN...) est stocké dans Jenkins :
+        // Administrer Jenkins > Credentials > "Secret file" avec cet ID.
+        ENV_CREDENTIALS_ID = "notebook-api-env"
+        // Dossier du VPS où sont gardées les photos entre deux déploiements
         UPLOADS_VOLUME = "/opt/notebook/uploads"
-        // Fichier présent sur le VPS avec POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB (voir deploy/db.env.example)
         NETWORK = "notebook-network"
     }
 
@@ -31,18 +30,20 @@ pipeline {
                     sh "docker rm ${CONTAINER_NAME} || true"
                     
                     // 2. Lancer le nouveau conteneur
-                    // On passe le fichier .env présent sur le VPS
-                    sh """
-                        docker run -d \
-                        --name ${CONTAINER_NAME} \
-                        --network notebook-network \
-                        -p ${APP_PORT}:${APP_PORT} \
-                        --env-file ${ENV_FILE} \
-                        -e PORT=${APP_PORT} \
-                        -v ${UPLOADS_VOLUME}:/app/uploads \
-                        --restart unless-stopped \
-                        ${IMAGE_NAME}:latest
-                    """
+                    // Jenkins copie le .env secret dans un fichier temporaire ($API_ENV), supprimé après l'étape
+                    withCredentials([file(credentialsId: env.ENV_CREDENTIALS_ID, variable: 'API_ENV')]) {
+                        sh '''
+                            docker run -d \
+                            --name "$CONTAINER_NAME" \
+                            --network "$NETWORK" \
+                            -p "$APP_PORT:$APP_PORT" \
+                            --env-file "$API_ENV" \
+                            -e PORT="$APP_PORT" \
+                            -v "$UPLOADS_VOLUME:/app/uploads" \
+                            --restart unless-stopped \
+                            "$IMAGE_NAME:latest"
+                        '''
+                    }
                 }
             }
         }

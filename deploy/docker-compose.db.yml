@@ -1,0 +1,43 @@
+# Base PostgreSQL de production pour Notebook.
+#
+# Sur le VPS, une seule fois :
+#   docker network create notebook-network          # si le réseau n'existe pas encore
+#   cp db.env.example db.env && nano db.env         # mettre un vrai mot de passe
+#   docker compose -f docker-compose.db.yml --env-file db.env up -d
+#
+# L'API (lancée par Jenkins sur le même réseau) s'y connecte avec :
+#   DATABASE_URL=postgresql://<POSTGRES_USER>:<POSTGRES_PASSWORD>@notebook-db:5432/<POSTGRES_DB>?schema=public
+
+name: notebook-db
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: notebook-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-notebook}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans db.env}
+      POSTGRES_DB: ${POSTGRES_DB:-travel_board}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - notebook-network
+    # Pas de port publié : la base n'est joignable que par les conteneurs du réseau.
+    # Pour y accéder depuis ton Mac via un tunnel SSH, décommente (écoute uniquement en local sur le VPS) :
+    # ports:
+    #   - '127.0.0.1:5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+    # Nom fixe : les données survivent à `docker compose down` (sauf avec -v)
+    name: notebook-pgdata
+
+networks:
+  notebook-network:
+    external: true

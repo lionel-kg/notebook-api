@@ -30,20 +30,17 @@ pipeline {
                     sh "docker rm ${CONTAINER_NAME} || true"
                     
                     // 2. Lancer le nouveau conteneur
-                    // Jenkins copie le .env secret dans un fichier temporaire ($API_ENV), supprimé après l'étape
-                    withCredentials([file(credentialsId: env.ENV_CREDENTIALS_ID, variable: 'API_ENV')]) {
-                        sh '''
-                            docker run -d \
-                            --name "$CONTAINER_NAME" \
-                            --network "$NETWORK" \
-                            -p "$APP_PORT:$APP_PORT" \
-                            --env-file "$API_ENV" \
-                            -e PORT="$APP_PORT" \
-                            -v "$UPLOADS_VOLUME:/app/uploads" \
-                            --restart unless-stopped \
-                            "$IMAGE_NAME:latest"
-                        '''
-                    }
+                    // On passe le fichier .env présent sur le VPS
+                    sh """
+                        docker run -d \
+                        --name ${CONTAINER_NAME} \
+                        --network notebook-network \
+                        -p ${APP_PORT}:${APP_PORT} \
+                        -e PORT=${APP_PORT} \
+                        -v ${UPLOADS_VOLUME}:/app/uploads \
+                        --restart unless-stopped \
+                        ${IMAGE_NAME}:latest
+                    """
                 }
             }
         }

@@ -4,8 +4,8 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 COPY package.json package-lock.json ./
-RUN npm install
 COPY prisma ./prisma/
+RUN npm install
 RUN npx prisma generate
 COPY . .
 COPY .env.example .env

@@ -17,9 +17,16 @@ const albumMeta = z.object({
   deskColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
 });
 
-/** Vérifie que l'album appartient à l'utilisateur connecté. */
+/** Vérifie que l'album appartient à l'utilisateur connecté (réservé à la suppression). */
 async function ownedAlbum(albumId: string, userId: string) {
   const album = await prisma.album.findFirst({ where: { id: albumId, ownerId: userId } });
+  if (!album) throw new HttpError(404, 'Album introuvable');
+  return album;
+}
+
+/** Tout utilisateur connecté peut modifier n'importe quel album : on vérifie seulement qu'il existe. */
+async function editableAlbum(albumId: string) {
+  const album = await prisma.album.findUnique({ where: { id: albumId } });
   if (!album) throw new HttpError(404, 'Album introuvable');
   return album;
 }
@@ -86,13 +93,13 @@ albumsRouter.post('/', async (req, res) => {
 });
 
 albumsRouter.get('/:id', async (req, res) => {
-  const album = await ownedAlbum(req.params.id, req.user!.id);
+  const album = await editableAlbum(req.params.id);
   const pages = await prisma.page.findMany({ where: { albumId: album.id }, include: { items: true } });
   res.json({ album, pages: toClientPages(pages) });
 });
 
 albumsRouter.patch('/:id', async (req, res) => {
-  await ownedAlbum(req.params.id, req.user!.id);
+  await editableAlbum(req.params.id);
   const meta = albumMeta.partial().parse(req.body);
   const album = await prisma.album.update({ where: { id: req.params.id }, data: meta });
   res.json({ album });
@@ -108,7 +115,7 @@ albumsRouter.delete('/:id', async (req, res) => {
 
 /** Remplace tout le contenu (pages, éléments, dessins) — appelé par l'enregistrement automatique. */
 albumsRouter.put('/:id/pages', async (req, res) => {
-  const album = await ownedAlbum(req.params.id, req.user!.id);
+  const album = await editableAlbum(req.params.id);
   const pages = pagesSchema.parse(req.body?.pages);
   await writePages(album.id, pages);
   res.json({ ok: true, savedAt: new Date().toISOString() });
@@ -137,7 +144,7 @@ const upload = multer({
 
 albumsRouter.post('/:id/photos', async (req, res, next) => {
   try {
-    await ownedAlbum(req.params.id, req.user!.id);
+    await editableAlbum(req.params.id);
   } catch (e) {
     return next(e);
   }

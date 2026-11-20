@@ -3,7 +3,7 @@ import { prisma } from '../prisma.js';
 import { HttpError } from '../middleware/error.js';
 import { toClientPages } from '../lib/albumContent.js';
 
-/** Lecture seule, sans connexion : tous les albums sont publics. */
+/** Lecture sans connexion : tous les albums sont publics (la modification demande d'être connecté). */
 export const publicRouter = Router();
 
 publicRouter.get('/albums', async (_req, res) => {
@@ -49,7 +49,8 @@ publicRouter.get('/albums/:id', async (req, res) => {
   res.json({
     album: { ...meta, owner: owner.username },
     pages: toClientPages(pages),
-    // L'interface propose la modification uniquement à l'auteur ; l'API la vérifie de toute façon.
-    canEdit: req.user?.id === ownerId,
+    // Toute personne connectée peut modifier ; seul l'auteur peut supprimer l'album.
+    canEdit: !!req.user,
+    isOwner: req.user?.id === ownerId,
   });
 });

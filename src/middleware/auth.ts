@@ -39,6 +39,20 @@ export function clearSessionCookie(res: Response): void {
   res.clearCookie(config.sessionCookie, { httpOnly: true, secure: config.isProd, sameSite: 'lax', path: '/' });
 }
 
+/** Lit la session si elle existe, sans l'exiger (pages publiques qui s'adaptent à la personne connectée). */
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const token: string | undefined = req.cookies?.[config.sessionCookie];
+  if (token) {
+    try {
+      const payload = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] }) as jwt.JwtPayload & SessionPayload;
+      if (payload.sub) req.user = { id: payload.sub, username: payload.username };
+    } catch {
+      // Session invalide ou expirée : on continue en visiteur.
+    }
+  }
+  next();
+}
+
 /** Exige une session valide (cookie httpOnly). */
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
   const token: string | undefined = req.cookies?.[config.sessionCookie];

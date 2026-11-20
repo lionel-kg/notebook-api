@@ -6,7 +6,8 @@ import { config } from './config.js';
 import { authRouter } from './routes/auth.js';
 import { albumsRouter } from './routes/albums.js';
 import { photosRouter } from './routes/photos.js';
-import { requireAuth } from './middleware/auth.js';
+import { publicRouter } from './routes/public.js';
+import { optionalAuth, requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/error.js';
 
 export function createApp() {
@@ -24,8 +25,9 @@ export function createApp() {
   });
 
   app.use('/api/auth', authRouter);
+  app.use('/api/public', optionalAuth, publicRouter);
   app.use('/api/albums', requireAuth, albumsRouter);
-  app.use('/api/photos', requireAuth, photosRouter);
+  app.use('/api/photos', photosRouter);
 
   app.use(notFound);
   app.use(errorHandler);

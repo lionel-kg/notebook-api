@@ -6,13 +6,11 @@ import { HttpError } from '../middleware/error.js';
 
 export const photosRouter = Router();
 
-/** Sert une photo uniquement à la personne propriétaire de l'album. */
+/** Sert une photo à tout le monde : les albums sont publics. */
 photosRouter.get('/:id', async (req, res) => {
-  const photo = await prisma.photo.findFirst({
-    where: { id: req.params.id, album: { ownerId: req.user!.id } },
-  });
+  const photo = await prisma.photo.findUnique({ where: { id: req.params.id } });
   if (!photo) throw new HttpError(404, 'Photo introuvable');
-  res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   res.type(photo.mimeType);
   res.sendFile(path.join(config.uploadDir, photo.filename), { dotfiles: 'deny' });
 });

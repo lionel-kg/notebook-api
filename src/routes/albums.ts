@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { config } from '../config.js';
 import { HttpError } from '../middleware/error.js';
+import { broadcast } from '../realtime.js';
 import { defaultPages, pagesSchema, toClientPages, toDbItems, type ClientPage } from '../lib/albumContent.js';
 
 export const albumsRouter = Router();
@@ -110,6 +111,7 @@ albumsRouter.delete('/:id', async (req, res) => {
   const photos = await prisma.photo.findMany({ where: { albumId: album.id }, select: { filename: true } });
   await prisma.album.delete({ where: { id: album.id } });
   await Promise.all(photos.map((p) => fs.rm(path.join(config.uploadDir, p.filename), { force: true })));
+  broadcast(album.id, { type: 'deleted', by: req.user!.username });
   res.status(204).end();
 });
 
@@ -118,6 +120,10 @@ albumsRouter.put('/:id/pages', async (req, res) => {
   const album = await editableAlbum(req.params.id);
   const pages = pagesSchema.parse(req.body?.pages);
   await writePages(album.id, pages);
+  // Identifiant de l'onglet qui enregistre : il ignore sa propre diffusion.
+  const header = req.get('x-client-id');
+  const clientId = header && /^[\w-]{1,64}$/.test(header) ? header : null;
+  broadcast(album.id, { type: 'pages', pages, by: req.user!.username, clientId });
   res.json({ ok: true, savedAt: new Date().toISOString() });
 });
 

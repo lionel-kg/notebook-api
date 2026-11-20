@@ -8,6 +8,8 @@ COPY prisma ./prisma/
 RUN npm install
 RUN npx prisma generate
 COPY . .
+# Compile le TypeScript (src/ -> dist/) : sans ça, `npm start` ne trouve pas dist/index.js
+RUN npm run build
 COPY .env.example .env
 
 EXPOSE 4001
